@@ -26,6 +26,10 @@ class PermissionSeeder extends Seeder
             'suppliers.create',
             'suppliers.update',
             'suppliers.delete',
+            'gcash.view',
+            'gcash.create',
+            'gcash.update',
+            'gcash.delete',
             'settings.manage',
         ];
 
@@ -41,9 +45,13 @@ class PermissionSeeder extends Seeder
             'products.view', 'products.create', 'products.update',
             'categories.view', 'categories.create', 'categories.update',
             'suppliers.view', 'suppliers.create', 'suppliers.update',
+            'gcash.view', 'gcash.create', 'gcash.update',
         ]);
 
-        Role::firstOrCreate(['name' => 'Cashier', 'guard_name' => 'web']);
+        $cashier = Role::firstOrCreate(['name' => 'Cashier', 'guard_name' => 'web']);
+        $cashier->syncPermissions([
+            'gcash.view', 'gcash.create', 'gcash.update',
+        ]);
 
         $inventoryStaff = Role::firstOrCreate(['name' => 'Inventory Staff', 'guard_name' => 'web']);
         $inventoryStaff->syncPermissions([

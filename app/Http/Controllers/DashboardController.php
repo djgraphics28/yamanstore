@@ -19,15 +19,18 @@ class DashboardController extends Controller
                 'totalCategories' => Category::count(),
             ],
             'categoryDistribution' => Category::query()
+                ->major()
                 ->withCount('products')
-                ->get(['id', 'name'])
-                ->filter(fn (Category $category) => $category->products_count > 0)
-                ->sortByDesc('products_count')
-                ->values()
-                ->map(fn (Category $category) => [
-                    'name' => $category->name,
-                    'value' => $category->products_count,
-                ]),
+                ->with(['children' => fn ($query) => $query->withCount('products')])
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Category $major) => [
+                    'name' => $major->name,
+                    'value' => $major->products_count + $major->children->sum('products_count'),
+                ])
+                ->filter(fn (array $row) => $row['value'] > 0)
+                ->sortByDesc('value')
+                ->values(),
         ]);
     }
 }

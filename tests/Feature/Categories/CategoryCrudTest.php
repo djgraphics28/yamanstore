@@ -89,3 +89,35 @@ test('bulk deleting categories requires at least one id', function () {
 
     $response->assertSessionHasErrors('ids');
 });
+
+test('administrator can create a category nested under a major category', function () {
+    $major = Category::factory()->create(['parent_id' => null]);
+
+    $response = $this->actingAs($this->admin)->post(route('categories.store'), [
+        'name' => 'Instant Noodles',
+        'parent_id' => $major->id,
+        'is_active' => true,
+    ]);
+
+    $response->assertSessionHasNoErrors()->assertRedirect(route('categories.index'));
+
+    $this->assertDatabaseHas('categories', [
+        'name' => 'Instant Noodles',
+        'parent_id' => $major->id,
+    ]);
+});
+
+test('administrator can update a category to reassign its parent', function () {
+    $major = Category::factory()->create(['parent_id' => null]);
+    $category = Category::factory()->create(['parent_id' => null]);
+
+    $response = $this->actingAs($this->admin)->put(route('categories.update', $category), [
+        'name' => $category->name,
+        'parent_id' => $major->id,
+        'is_active' => true,
+    ]);
+
+    $response->assertSessionHasNoErrors();
+
+    expect($category->refresh()->parent_id)->toBe($major->id);
+});

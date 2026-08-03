@@ -1,5 +1,7 @@
 export type Category = {
     id: number;
+    parent_id: number | null;
+    parent?: { id: number; name: string } | null;
     name: string;
     slug: string;
     description: string | null;
@@ -80,4 +82,58 @@ export type Paginated<T> = {
     total: number;
     from: number | null;
     to: number | null;
+};
+
+export type LoadNetwork = 'globe' | 'smart' | 'tnt' | 'dito' | 'tm';
+
+export type GcashTransactionType = 'cash_in' | 'cash_out';
+
+export type LoadTransaction = {
+    id: number;
+    network: LoadNetwork;
+    amount: number;
+    service_fee: number;
+    reference_number: string | null;
+    user_id: number;
+    notes: string | null;
+    created_at: string;
+};
+
+export type GcashTransaction = {
+    id: number;
+    type: GcashTransactionType;
+    amount: number;
+    service_fee: number;
+    reference_number: string | null;
+    user_id: number;
+    notes: string | null;
+    created_at: string;
+};
+
+export type GcashPeriodStats = {
+    count: number;
+    amount: number;
+    fees: number;
+};
+
+export type GcashSummary = {
+    load: GcashPeriodStats;
+    cashIn: GcashPeriodStats;
+    cashOut: GcashPeriodStats;
+    cashOnHand: number;
+    gcashBalance: number;
+};
+
+export type GcashRecentTransaction = {
+    kind: 'load' | 'gcash';
+    id: number;
+    label: string;
+    network?: LoadNetwork;
+    type?: GcashTransactionType;
+    amount: number;
+    service_fee: number;
+    reference_number: string | null;
+    notes: string | null;
+    user: string;
+    created_at: string;
 };

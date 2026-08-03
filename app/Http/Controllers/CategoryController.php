@@ -17,18 +17,24 @@ class CategoryController extends Controller
         $this->authorize('viewAny', Category::class);
 
         $categories = Category::query()
+            ->with('parent')
             ->withCount('products')
             ->when($request->string('search')->toString(), function ($query, string $search): void {
                 $query->where('name', 'like', "%{$search}%");
             })
+            ->when($request->integer('major_id'), function ($query, int $majorId): void {
+                $query->where('parent_id', $majorId);
+            })
             ->orderBy('name')
-            ->paginate(15)
+            ->paginate($this->perPage($request))
             ->withQueryString();
 
         return Inertia::render('categories/index', [
             'categories' => $categories,
+            'majorCategories' => Category::query()->major()->orderBy('name')->get(['id', 'name']),
             'filters' => [
                 'search' => $request->string('search')->toString(),
+                'major_id' => $request->integer('major_id') ?: null,
             ],
         ]);
     }
@@ -37,7 +43,9 @@ class CategoryController extends Controller
     {
         $this->authorize('create', Category::class);
 
-        return Inertia::render('categories/create');
+        return Inertia::render('categories/create', [
+            'majorCategories' => Category::query()->major()->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function store(StoreCategoryRequest $request): RedirectResponse
@@ -57,6 +65,8 @@ class CategoryController extends Controller
 
         return Inertia::render('categories/edit', [
             'category' => $category,
+            'majorCategories' => Category::query()->major()->where('id', '!=', $category->id)->orderBy('name')->get(['id', 'name']),
+            'hasChildren' => $category->children()->exists(),
         ]);
     }
 

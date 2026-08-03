@@ -94,6 +94,19 @@ export default function ProductsIndex({
         );
     };
 
+    const handlePerPageChange = (perPage: number) => {
+        router.get(
+            index().url,
+            {
+                search: filters.search || undefined,
+                category_id: filters.category_id || undefined,
+                status: filters.status || undefined,
+                per_page: perPage,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
     const columns: ColumnDef<ProductListItem, unknown>[] = [
         {
             id: 'product',
@@ -358,7 +371,18 @@ export default function ProductsIndex({
                             )}
                         />
 
-                        <PaginationBar links={products.links} />
+                        <PaginationBar
+                            links={products.links}
+                            meta={{
+                                current_page: products.current_page,
+                                last_page: products.last_page,
+                                per_page: products.per_page,
+                                total: products.total,
+                                from: products.from,
+                                to: products.to,
+                            }}
+                            onPerPageChange={handlePerPageChange}
+                        />
                     </>
                 )}
             </div>

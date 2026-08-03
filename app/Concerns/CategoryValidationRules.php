@@ -26,6 +26,21 @@ trait CategoryValidationRules
             ],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'parent_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('categories', 'id')->whereNull('parent_id'),
+                ...($categoryId !== null ? [Rule::notIn([$categoryId])] : []),
+                function (string $attribute, mixed $value, \Closure $fail) use ($categoryId): void {
+                    if (! $value || ! $categoryId) {
+                        return;
+                    }
+
+                    if (Category::where('parent_id', $categoryId)->exists()) {
+                        $fail('A category with subcategories cannot be nested under another category.');
+                    }
+                },
+            ],
         ];
     }
 }

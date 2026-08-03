@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -17,6 +18,22 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    /**
+     * @return Collection<int, array{id: int, name: string}>
+     */
+    private function categoryOptions(): Collection
+    {
+        return Category::query()
+            ->with('parent')
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->parent ? "{$category->parent->name} / {$category->name}" : $category->name,
+            ]);
+    }
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Product::class);
@@ -31,12 +48,12 @@ class ProductController extends Controller
                 $query->where('status', $status);
             })
             ->orderBy('name')
-            ->paginate(15)
+            ->paginate($this->perPage($request))
             ->withQueryString();
 
         return Inertia::render('products/index', [
             'products' => $products->through(fn (Product $product) => (new ProductResource($product))->resolve()),
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'categories' => $this->categoryOptions(),
             'filters' => [
                 'search' => $request->string('search')->toString(),
                 'category_id' => $request->integer('category_id') ?: null,
@@ -50,7 +67,7 @@ class ProductController extends Controller
         $this->authorize('create', Product::class);
 
         return Inertia::render('products/create', [
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'categories' => $this->categoryOptions(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -85,7 +102,7 @@ class ProductController extends Controller
 
         return Inertia::render('products/edit', [
             'product' => $product,
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'categories' => $this->categoryOptions(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
         ]);
     }

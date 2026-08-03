@@ -41,6 +41,14 @@ export default function SuppliersIndex({
         );
     };
 
+    const handlePerPageChange = (perPage: number) => {
+        router.get(
+            index().url,
+            { search: filters.search || undefined, per_page: perPage },
+            { preserveState: true, replace: true },
+        );
+    };
+
     const columns: ColumnDef<Supplier, unknown>[] = [
         {
             id: 'name',
@@ -212,7 +220,18 @@ export default function SuppliersIndex({
                             )}
                         />
 
-                        <PaginationBar links={suppliers.links} />
+                        <PaginationBar
+                            links={suppliers.links}
+                            meta={{
+                                current_page: suppliers.current_page,
+                                last_page: suppliers.last_page,
+                                per_page: suppliers.per_page,
+                                total: suppliers.total,
+                                from: suppliers.from,
+                                to: suppliers.to,
+                            }}
+                            onPerPageChange={handlePerPageChange}
+                        />
                     </>
                 )}
             </div>

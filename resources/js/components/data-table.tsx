@@ -86,7 +86,7 @@ export function DataTable<TData extends { id: number | string }>({
     const table = useReactTable({
         data,
         columns: allColumns,
-        state: { sorting, columnVisibility, rowSelection },
+        state: { sorting, columnVisibility, rowSelection: rowSelection ?? {} },
         onSortingChange: setSorting,
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange,

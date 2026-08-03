@@ -6,6 +6,7 @@ use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -13,6 +14,7 @@ use Illuminate\Support\Str;
 
 /**
  * @property int $id
+ * @property int|null $parent_id
  * @property string $name
  * @property string $slug
  * @property string|null $description
@@ -27,6 +29,7 @@ class Category extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'parent_id',
         'name',
         'slug',
         'description',
@@ -58,11 +61,36 @@ class Category extends Model
     }
 
     /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany<Category, $this>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    /**
      * @param  Builder<Category>  $query
      * @return Builder<Category>
      */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * @param  Builder<Category>  $query
+     * @return Builder<Category>
+     */
+    public function scopeMajor(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
     }
 }

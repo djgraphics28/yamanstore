@@ -6,6 +6,7 @@ import {
     PackageIcon,
     TagsIcon,
     TruckIcon,
+    WalletIcon,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -23,6 +24,7 @@ import {
 import { usePermissions } from '@/hooks/use-permission';
 import { dashboard } from '@/routes';
 import { index as categoriesIndex } from '@/routes/categories';
+import { index as gcashIndex } from '@/routes/gcash';
 import { index as productsIndex } from '@/routes/products';
 import { index as suppliersIndex } from '@/routes/suppliers';
 import type { NavItem } from '@/types';
@@ -50,6 +52,12 @@ const mainNavItems: NavItem[] = [
         href: suppliersIndex(),
         icon: TruckIcon,
         permission: 'suppliers.view',
+    },
+    {
+        title: 'GCash',
+        href: gcashIndex(),
+        icon: WalletIcon,
+        permission: 'gcash.view',
     },
 ];
 

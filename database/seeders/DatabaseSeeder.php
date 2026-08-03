@@ -28,5 +28,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->assignRole('Administrator');
+
+        $this->call(GcashDemoSeeder::class);
     }
 }

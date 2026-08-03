@@ -3,7 +3,11 @@ import { CategoryForm } from '@/components/categories/category-form';
 import Heading from '@/components/heading';
 import { create, index } from '@/routes/categories';
 
-export default function CreateCategory() {
+export default function CreateCategory({
+    majorCategories,
+}: {
+    majorCategories: { id: number; name: string }[];
+}) {
     return (
         <>
             <Head title="Add category" />
@@ -15,7 +19,7 @@ export default function CreateCategory() {
                 />
 
                 <div className="max-w-xl">
-                    <CategoryForm />
+                    <CategoryForm majorCategories={majorCategories} />
                 </div>
             </div>
         </>

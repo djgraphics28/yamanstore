@@ -13,16 +13,25 @@ import { PaginationBar } from '@/components/pagination-bar';
 import { SearchInput } from '@/components/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { usePermission } from '@/hooks/use-permission';
 import { bulkDestroy, create, destroy, edit, index } from '@/routes/categories';
 import type { Category, Paginated } from '@/types';
 
 export default function CategoriesIndex({
     categories,
+    majorCategories,
     filters,
 }: {
     categories: Paginated<Category>;
-    filters: { search: string };
+    majorCategories: { id: number; name: string }[];
+    filters: { search: string; major_id: number | null };
 }) {
     const canCreate = usePermission('categories.create');
     const canUpdate = usePermission('categories.update');
@@ -36,7 +45,33 @@ export default function CategoriesIndex({
     const handleSearch = (search: string) => {
         router.get(
             index().url,
-            { search: search || undefined },
+            {
+                search: search || undefined,
+                major_id: filters.major_id || undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handleMajorFilterChange = (majorId: number | null) => {
+        router.get(
+            index().url,
+            {
+                search: filters.search || undefined,
+                major_id: majorId || undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handlePerPageChange = (perPage: number) => {
+        router.get(
+            index().url,
+            {
+                search: filters.search || undefined,
+                major_id: filters.major_id || undefined,
+                per_page: perPage,
+            },
             { preserveState: true, replace: true },
         );
     };
@@ -49,6 +84,19 @@ export default function CategoriesIndex({
                 <DataTableColumnHeader column={column} title="Name" />
             ),
             cell: ({ row }) => row.original.name,
+        },
+        {
+            id: 'parent',
+            accessorFn: (row) => row.parent?.name ?? '',
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Parent" />
+            ),
+            cell: ({ row }) =>
+                row.original.parent ? (
+                    row.original.parent.name
+                ) : (
+                    <Badge variant="outline">Major</Badge>
+                ),
         },
         {
             id: 'products_count',
@@ -117,12 +165,40 @@ export default function CategoriesIndex({
                     )}
                 </div>
 
-                <SearchInput
-                    initialValue={filters.search}
-                    placeholder="Search categories…"
-                    onSearch={handleSearch}
-                    className="max-w-sm"
-                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <SearchInput
+                        initialValue={filters.search}
+                        placeholder="Search categories…"
+                        onSearch={handleSearch}
+                        className="max-w-sm"
+                    />
+
+                    <Select
+                        value={filters.major_id?.toString() ?? 'all'}
+                        onValueChange={(value) =>
+                            handleMajorFilterChange(
+                                value === 'all' ? null : Number(value),
+                            )
+                        }
+                    >
+                        <SelectTrigger className="w-full sm:w-56">
+                            <SelectValue placeholder="All major categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">
+                                All major categories
+                            </SelectItem>
+                            {majorCategories.map((major) => (
+                                <SelectItem
+                                    key={major.id}
+                                    value={major.id.toString()}
+                                >
+                                    {major.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
 
                 {canDelete && (
                     <BulkActionsBar
@@ -163,7 +239,11 @@ export default function CategoriesIndex({
                                             {row.name}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {row.products_count ?? 0} products
+                                            {row.parent
+                                                ? row.parent.name
+                                                : 'Major'}{' '}
+                                            · {row.products_count ?? 0}{' '}
+                                            products
                                         </p>
                                         <Badge
                                             variant={
@@ -201,7 +281,18 @@ export default function CategoriesIndex({
                             )}
                         />
 
-                        <PaginationBar links={categories.links} />
+                        <PaginationBar
+                            links={categories.links}
+                            meta={{
+                                current_page: categories.current_page,
+                                last_page: categories.last_page,
+                                per_page: categories.per_page,
+                                total: categories.total,
+                                from: categories.from,
+                                to: categories.to,
+                            }}
+                            onPerPageChange={handlePerPageChange}
+                        />
                     </>
                 )}
             </div>

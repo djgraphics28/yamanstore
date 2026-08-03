@@ -19,12 +19,17 @@ test('administrator role has every permission', function () {
     expect($administrator->permissions()->count())->toBe(Permission::count());
 });
 
-test('cashier role has no admin permissions in phase 1', function () {
+test('cashier role can only access the gcash counter workflow', function () {
     $this->seed(PermissionSeeder::class);
 
     $cashier = Role::findByName('Cashier');
 
-    expect($cashier->permissions()->count())->toBe(0);
+    expect($cashier->permissions()->count())->toBe(3)
+        ->and($cashier->hasPermissionTo('gcash.view'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('gcash.create'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('gcash.update'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('gcash.delete'))->toBeFalse()
+        ->and($cashier->hasPermissionTo('products.view'))->toBeFalse();
 });
 
 test('inventory staff can delete products but not categories or suppliers', function () {
@@ -54,5 +59,5 @@ test('re-running the seeder does not duplicate roles or permissions', function (
     $this->seed(PermissionSeeder::class);
 
     expect(Role::count())->toBe(4)
-        ->and(Permission::count())->toBe(13);
+        ->and(Permission::count())->toBe(17);
 });

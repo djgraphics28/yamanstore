@@ -22,7 +22,7 @@ class SupplierController extends Controller
                 $query->where('name', 'like', "%{$search}%");
             })
             ->orderBy('name')
-            ->paginate(15)
+            ->paginate($this->perPage($request))
             ->withQueryString();
 
         return Inertia::render('suppliers/index', [

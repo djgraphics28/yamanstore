@@ -4,7 +4,15 @@ import Heading from '@/components/heading';
 import { edit, index } from '@/routes/categories';
 import type { Category } from '@/types';
 
-export default function EditCategory({ category }: { category: Category }) {
+export default function EditCategory({
+    category,
+    majorCategories,
+    hasChildren,
+}: {
+    category: Category;
+    majorCategories: { id: number; name: string }[];
+    hasChildren: boolean;
+}) {
     return (
         <>
             <Head title={`Edit ${category.name}`} />
@@ -16,7 +24,11 @@ export default function EditCategory({ category }: { category: Category }) {
                 />
 
                 <div className="max-w-xl">
-                    <CategoryForm category={category} />
+                    <CategoryForm
+                        category={category}
+                        majorCategories={majorCategories}
+                        hasChildren={hasChildren}
+                    />
                 </div>
             </div>
         </>
