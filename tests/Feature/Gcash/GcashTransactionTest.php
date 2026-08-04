@@ -2,10 +2,12 @@
 
 use App\Models\GcashTransaction;
 use App\Models\User;
+use Database\Seeders\GcashFeeBracketSeeder;
 use Database\Seeders\PermissionSeeder;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
+    $this->seed(GcashFeeBracketSeeder::class);
 });
 
 test('recording a cash in transaction computes the fee from the bracket table', function () {
@@ -121,4 +123,59 @@ test('inventory staff cannot edit a gcash transaction', function () {
     $this->actingAs($inventoryStaff)
         ->put(route('gcash.transactions.update', $transaction), ['type' => 'cash_in', 'amount' => 100])
         ->assertForbidden();
+});
+
+test('fee_in_gcash is stored and defaults to false', function () {
+    $cashier = User::factory()->create()->assignRole('Cashier');
+
+    $this->actingAs($cashier)->post(route('gcash.transactions.store'), [
+        'type' => 'cash_out',
+        'amount' => 500,
+    ]);
+
+    $this->assertDatabaseHas('gcash_transactions', [
+        'type' => 'cash_out',
+        'amount' => 500,
+        'fee_in_gcash' => false,
+    ]);
+});
+
+test('cash out with fee_in_gcash adds fee to gcash balance not cash on hand', function () {
+    $admin = User::factory()->create()->assignRole('Administrator');
+
+    // ₱500 cash out, fee ₱15, fee paid via GCash → customer sends ₱515 GCash
+    $this->actingAs($admin)->post(route('gcash.transactions.store'), [
+        'type' => 'cash_out',
+        'amount' => 500,
+        'fee_in_gcash' => true,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('gcash.index'));
+
+    $summary = $response->original->getData()['page']['props']['summary'];
+
+    // GCash balance: +₱500 (cash out) + ₱15 (fee in GCash) = ₱515
+    expect($summary['gcashBalance'])->toBe(515);
+    // Cash on hand: -₱500 (gave cash) + ₱0 fee from cash (fee is in GCash) = -₱500
+    expect($summary['cashOnHand'])->toBe(-500);
+});
+
+test('cash out without fee_in_gcash adds fee to cash on hand', function () {
+    $admin = User::factory()->create()->assignRole('Administrator');
+
+    // ₱500 cash out, fee ₱15, fee paid in cash
+    $this->actingAs($admin)->post(route('gcash.transactions.store'), [
+        'type' => 'cash_out',
+        'amount' => 500,
+        'fee_in_gcash' => false,
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('gcash.index'));
+
+    $summary = $response->original->getData()['page']['props']['summary'];
+
+    // GCash balance: +₱500 (cash out amount only)
+    expect($summary['gcashBalance'])->toBe(500);
+    // Cash on hand: -₱500 + ₱15 fee = -₱485
+    expect($summary['cashOnHand'])->toBe(-485);
 });

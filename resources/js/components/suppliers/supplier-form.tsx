@@ -10,13 +10,13 @@ import { index as suppliersIndex } from '@/routes/suppliers';
 import type { Supplier } from '@/types';
 
 export function SupplierForm({ supplier }: { supplier?: Supplier }) {
-    const form = supplier
-        ? SupplierController.update.form(supplier)
-        : SupplierController.store.form();
+    const routeDef = supplier
+        ? SupplierController.update(supplier)
+        : SupplierController.store();
 
     return (
         <Form
-            {...form}
+            action={routeDef}
             options={{ preserveScroll: true }}
             className="space-y-6"
         >

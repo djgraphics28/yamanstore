@@ -5,30 +5,53 @@ import LoadTransactionController from '@/actions/App/Http/Controllers/LoadTransa
 import { DataTable } from '@/components/data-table';
 import type { ColumnDef } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
+import { DateRangePicker } from '@/components/date-range-picker';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { EmptyState } from '@/components/empty-state';
+import { GcashBalanceDialog } from '@/components/gcash/gcash-balance-dialog';
 import { GcashTransactionDialog } from '@/components/gcash/gcash-transaction-dialog';
 import { LoadTransactionDialog } from '@/components/gcash/load-transaction-dialog';
 import Heading from '@/components/heading';
 import { StatCard } from '@/components/stat-card';
 import { usePermission } from '@/hooks/use-permission';
+import type { FeeBracket } from '@/lib/gcash-fees';
 import { index } from '@/routes/gcash';
-import type { GcashRecentTransaction, GcashSummary } from '@/types';
+import type { GcashOpeningBalance, GcashRecentTransaction, GcashSummary } from '@/types';
 
 type Row = Omit<GcashRecentTransaction, 'id'> & { id: string; recordId: number };
+
+function periodLabel(dateFrom: string, dateTo: string): string {
+    const today = new Date().toISOString().slice(0, 10);
+    if (dateFrom === dateTo) {
+        return dateFrom === today ? 'today' : dateFrom;
+    }
+    return `${dateFrom} – ${dateTo}`;
+}
 
 export default function GcashIndex({
     summary,
     recentTransactions,
     networks,
+    gcashBrackets,
+    loadBrackets,
+    dateFrom,
+    dateTo,
+    openingBalance,
 }: {
     summary: GcashSummary;
     recentTransactions: GcashRecentTransaction[];
     networks: { value: string; label: string }[];
+    gcashBrackets: FeeBracket[];
+    loadBrackets: FeeBracket[];
+    dateFrom: string;
+    dateTo: string;
+    openingBalance: GcashOpeningBalance | null;
 }) {
     const canCreate = usePermission('gcash.create');
     const canUpdate = usePermission('gcash.update');
     const canDelete = usePermission('gcash.delete');
+
+    const label = periodLabel(dateFrom, dateTo);
 
     const rows: Row[] = recentTransactions.map((transaction) => ({
         ...transaction,
@@ -96,6 +119,7 @@ export default function GcashIndex({
                     {canUpdate &&
                         (row.original.kind === 'load' ? (
                             <LoadTransactionDialog
+                                brackets={loadBrackets}
                                 networks={networks}
                                 transaction={{
                                     id: row.original.recordId,
@@ -108,10 +132,13 @@ export default function GcashIndex({
                             />
                         ) : (
                             <GcashTransactionDialog
+                                brackets={gcashBrackets}
                                 transaction={{
                                     id: row.original.recordId,
                                     type: row.original.type!,
                                     amount: row.original.amount,
+                                    fee_in_gcash:
+                                        row.original.fee_in_gcash ?? false,
                                     reference_number:
                                         row.original.reference_number,
                                     notes: row.original.notes,
@@ -150,41 +177,55 @@ export default function GcashIndex({
                     />
                     {canCreate && (
                         <div className="flex flex-wrap gap-2">
-                            <LoadTransactionDialog networks={networks} />
-                            <GcashTransactionDialog />
+                            <LoadTransactionDialog brackets={loadBrackets} networks={networks} />
+                            <GcashTransactionDialog brackets={gcashBrackets} />
                         </div>
+                    )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <DateRangePicker
+                        dateFrom={dateFrom}
+                        dateTo={dateTo}
+                        url={index().url}
+                    />
+                    {canCreate && (
+                        <GcashBalanceDialog
+                            date={dateFrom}
+                            openingBalance={openingBalance}
+                        />
                     )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <StatCard
-                        title="Mobile Load (today)"
+                        title={`Mobile Load (${label})`}
                         value={`₱${summary.load.amount}`}
                         caption={`${summary.load.count} transactions · ₱${summary.load.fees} fees`}
                         icon={SmartphoneIcon}
                     />
                     <StatCard
-                        title="GCash Cash In (today)"
+                        title={`GCash Cash In (${label})`}
                         value={`₱${summary.cashIn.amount}`}
                         caption={`${summary.cashIn.count} transactions · ₱${summary.cashIn.fees} fees`}
                         icon={WalletIcon}
                     />
                     <StatCard
-                        title="GCash Cash Out (today)"
+                        title={`GCash Cash Out (${label})`}
                         value={`₱${summary.cashOut.amount}`}
                         caption={`${summary.cashOut.count} transactions · ₱${summary.cashOut.fees} fees`}
                         icon={WalletIcon}
                     />
                     <StatCard
-                        title="Cash on Hand (today)"
+                        title="Cash on Hand"
                         value={`₱${summary.cashOnHand}`}
-                        caption="Net change from today's transactions"
+                        caption={`Opening ₱${summary.openingCashOnHand} + net change from ${label}`}
                         icon={BanknoteIcon}
                     />
                     <StatCard
-                        title="GCash Balance (today)"
+                        title="GCash Balance"
                         value={`₱${summary.gcashBalance}`}
-                        caption="Net change from today's transactions"
+                        caption={`Opening ₱${summary.openingGcashBalance} + net change from ${label}`}
                         icon={WalletIcon}
                     />
                 </div>
@@ -216,6 +257,7 @@ export default function GcashIndex({
                                     {canUpdate &&
                                         (row.kind === 'load' ? (
                                             <LoadTransactionDialog
+                                                brackets={loadBrackets}
                                                 networks={networks}
                                                 transaction={{
                                                     id: row.recordId,
@@ -228,10 +270,14 @@ export default function GcashIndex({
                                             />
                                         ) : (
                                             <GcashTransactionDialog
+                                                brackets={gcashBrackets}
                                                 transaction={{
                                                     id: row.recordId,
                                                     type: row.type!,
                                                     amount: row.amount,
+                                                    fee_in_gcash:
+                                                        row.fee_in_gcash ??
+                                                        false,
                                                     reference_number:
                                                         row.reference_number,
                                                     notes: row.notes,

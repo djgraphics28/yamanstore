@@ -4,8 +4,12 @@ import {
     FolderGit2,
     LayoutGrid,
     PackageIcon,
+    PrinterIcon,
+    ReceiptIcon,
+    ShoppingCartIcon,
     TagsIcon,
     TruckIcon,
+    UsersIcon,
     WalletIcon,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -25,8 +29,12 @@ import { usePermissions } from '@/hooks/use-permission';
 import { dashboard } from '@/routes';
 import { index as categoriesIndex } from '@/routes/categories';
 import { index as gcashIndex } from '@/routes/gcash';
+import { index as posIndex } from '@/routes/pos';
+import { index as salesIndex } from '@/routes/pos/sales';
+import { index as printIndex } from '@/routes/print';
 import { index as productsIndex } from '@/routes/products';
 import { index as suppliersIndex } from '@/routes/suppliers';
+import { index as usersIndex } from '@/routes/users';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -54,10 +62,34 @@ const mainNavItems: NavItem[] = [
         permission: 'suppliers.view',
     },
     {
+        title: 'POS Terminal',
+        href: posIndex(),
+        icon: ShoppingCartIcon,
+        permission: 'pos.view',
+    },
+    {
+        title: 'Sales',
+        href: salesIndex(),
+        icon: ReceiptIcon,
+        permission: 'pos.view',
+    },
+    {
         title: 'GCash',
         href: gcashIndex(),
         icon: WalletIcon,
         permission: 'gcash.view',
+    },
+    {
+        title: 'Print',
+        href: printIndex(),
+        icon: PrinterIcon,
+        permission: 'print.view',
+    },
+    {
+        title: 'Users',
+        href: usersIndex(),
+        icon: UsersIcon,
+        permission: 'users.view',
     },
 ];
 

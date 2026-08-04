@@ -2,10 +2,12 @@
 
 use App\Models\LoadTransaction;
 use App\Models\User;
+use Database\Seeders\GcashFeeBracketSeeder;
 use Database\Seeders\PermissionSeeder;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
+    $this->seed(GcashFeeBracketSeeder::class);
 });
 
 test('recording a load transaction computes the fee from the bracket table', function () {

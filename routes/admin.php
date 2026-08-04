@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImportController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('suppliers/bulk-destroy', [SupplierController::class, 'bulkDestroy'])->name('suppliers.bulk-destroy');
     Route::resource('suppliers', SupplierController::class);
 
+    Route::get('products/import-template', [ProductImportController::class, 'template'])->name('products.import-template');
+    Route::post('products/import', [ProductImportController::class, 'import'])->name('products.import');
     Route::delete('products/bulk-destroy', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
     Route::resource('products', ProductController::class);
 });

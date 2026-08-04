@@ -20,7 +20,7 @@ class GcashTransactionFactory extends Factory
      */
     public function definition(): array
     {
-        $amount = fake()->numberBetween(GcashFeeSchedule::MIN_AMOUNT, GcashFeeSchedule::MAX_AMOUNT);
+        $amount = fake()->numberBetween(GcashFeeSchedule::minAmount(), GcashFeeSchedule::maxAmount());
 
         return [
             'type' => fake()->randomElement(GcashTransactionType::cases()),

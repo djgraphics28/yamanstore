@@ -20,9 +20,9 @@ export function CategoryForm({
     majorCategories?: { id: number; name: string }[];
     hasChildren?: boolean;
 }) {
-    const form = category
-        ? CategoryController.update.form(category)
-        : CategoryController.store.form();
+    const routeDef = category
+        ? CategoryController.update(category)
+        : CategoryController.store();
 
     const [parentId, setParentId] = useState<number | null>(
         category?.parent_id ?? null,
@@ -30,7 +30,7 @@ export function CategoryForm({
 
     return (
         <Form
-            {...form}
+            action={routeDef}
             options={{ preserveScroll: true }}
             className="space-y-6"
         >

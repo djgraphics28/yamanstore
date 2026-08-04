@@ -18,7 +18,8 @@ trait GcashTransactionValidationRules
     {
         return [
             'type' => ['required', Rule::enum(GcashTransactionType::class)],
-            'amount' => ['required', 'integer', 'min:'.GcashFeeSchedule::MIN_AMOUNT, 'max:'.GcashFeeSchedule::MAX_AMOUNT],
+            'amount' => ['required', 'integer', 'min:'.GcashFeeSchedule::minAmount(), 'max:'.GcashFeeSchedule::maxAmount()],
+            'fee_in_gcash' => ['nullable', 'boolean'],
             'reference_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string'],
         ];

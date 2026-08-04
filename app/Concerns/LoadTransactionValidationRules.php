@@ -18,7 +18,7 @@ trait LoadTransactionValidationRules
     {
         return [
             'network' => ['required', Rule::enum(LoadNetwork::class)],
-            'amount' => ['required', 'integer', 'min:'.LoadFeeSchedule::MIN_AMOUNT, 'max:'.LoadFeeSchedule::MAX_AMOUNT],
+            'amount' => ['required', 'integer', 'min:'.LoadFeeSchedule::minAmount(), 'max:'.LoadFeeSchedule::maxAmount()],
             'reference_number' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string'],
         ];

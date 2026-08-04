@@ -2,27 +2,39 @@
 
 namespace App\Support;
 
+use App\Models\GcashFeeBracket;
+use Illuminate\Support\Facades\Cache;
+
 final class LoadFeeSchedule
 {
-    public const MIN_AMOUNT = 10;
+    public static function brackets(): array
+    {
+        return Cache::remember('gcash_fee_brackets_load', 60, function () {
+            return GcashFeeBracket::where('schedule_type', 'load')
+                ->orderBy('min_amount')
+                ->get(['min_amount', 'max_amount', 'fee'])
+                ->map(fn ($b) => [$b->min_amount, $b->max_amount, $b->fee])
+                ->all();
+        });
+    }
 
-    public const MAX_AMOUNT = 500;
+    public static function minAmount(): int
+    {
+        $brackets = self::brackets();
 
-    /**
-     * @var array<int, array{0: int, 1: int, 2: int}>
-     */
-    private const BRACKETS = [
-        [10, 50, 5],
-        [51, 99, 10],
-        [100, 150, 15],
-        [151, 200, 20],
-        [201, 300, 30],
-        [301, 500, 50],
-    ];
+        return ! empty($brackets) ? $brackets[0][0] : 10;
+    }
+
+    public static function maxAmount(): int
+    {
+        $brackets = self::brackets();
+
+        return ! empty($brackets) ? end($brackets)[1] : 500;
+    }
 
     public static function feeFor(int $amount): ?int
     {
-        foreach (self::BRACKETS as [$min, $max, $fee]) {
+        foreach (self::brackets() as [$min, $max, $fee]) {
             if ($amount >= $min && $amount <= $max) {
                 return $fee;
             }

@@ -19,16 +19,21 @@ test('administrator role has every permission', function () {
     expect($administrator->permissions()->count())->toBe(Permission::count());
 });
 
-test('cashier role can only access the gcash counter workflow', function () {
+test('cashier role can access the gcash counter and print workflows', function () {
     $this->seed(PermissionSeeder::class);
 
     $cashier = Role::findByName('Cashier');
 
-    expect($cashier->permissions()->count())->toBe(3)
+    expect($cashier->permissions()->count())->toBe(6)
         ->and($cashier->hasPermissionTo('gcash.view'))->toBeTrue()
         ->and($cashier->hasPermissionTo('gcash.create'))->toBeTrue()
         ->and($cashier->hasPermissionTo('gcash.update'))->toBeTrue()
         ->and($cashier->hasPermissionTo('gcash.delete'))->toBeFalse()
+        ->and($cashier->hasPermissionTo('print.view'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('print.create'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('print.update'))->toBeTrue()
+        ->and($cashier->hasPermissionTo('print.delete'))->toBeFalse()
+        ->and($cashier->hasPermissionTo('users.view'))->toBeFalse()
         ->and($cashier->hasPermissionTo('products.view'))->toBeFalse();
 });
 
@@ -59,5 +64,5 @@ test('re-running the seeder does not duplicate roles or permissions', function (
     $this->seed(PermissionSeeder::class);
 
     expect(Role::count())->toBe(4)
-        ->and(Permission::count())->toBe(17);
+        ->and(Permission::count())->toBe(25);
 });

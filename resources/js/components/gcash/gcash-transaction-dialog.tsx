@@ -4,6 +4,7 @@ import { useState } from 'react';
 import GcashTransactionController from '@/actions/App/Http/Controllers/GcashTransactionController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -22,32 +23,45 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { gcashFeeFor, GCASH_MAX_AMOUNT, GCASH_MIN_AMOUNT } from '@/lib/gcash-fees';
+import { feeFor, maxAmount, minAmount  } from '@/lib/gcash-fees';
+import type {FeeBracket} from '@/lib/gcash-fees';
 import type { GcashTransactionType } from '@/types';
 
 type EditableGcashTransaction = {
     id: number;
     type: GcashTransactionType;
     amount: number;
+    fee_in_gcash: boolean;
     reference_number: string | null;
     notes: string | null;
 };
 
 export function GcashTransactionDialog({
+    brackets,
     transaction,
 }: {
+    brackets: FeeBracket[];
     transaction?: EditableGcashTransaction;
 }) {
     const [open, setOpen] = useState(false);
     const [amount, setAmount] = useState(
         transaction ? String(transaction.amount) : '',
     );
+    const [type, setType] = useState<GcashTransactionType | ''>(
+        transaction?.type ?? '',
+    );
+    const [feeInGcash, setFeeInGcash] = useState(
+        transaction?.fee_in_gcash ?? false,
+    );
 
-    const fee = amount ? gcashFeeFor(Number(amount)) : null;
+    const gcashMin = minAmount(brackets);
+    const gcashMax = maxAmount(brackets);
+    const fee = amount ? feeFor(brackets, Number(amount)) : null;
+    const isCashOut = type === 'cash_out';
 
-    const form = transaction
-        ? GcashTransactionController.update.form(transaction.id)
-        : GcashTransactionController.store.form();
+    const routeDef = transaction
+        ? GcashTransactionController.update(transaction.id)
+        : GcashTransactionController.store();
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -72,13 +86,15 @@ export function GcashTransactionDialog({
                 </DialogTitle>
 
                 <Form
-                    {...form}
+                    action={routeDef}
                     options={{ preserveScroll: true }}
                     onSuccess={() => {
                         setOpen(false);
 
                         if (!transaction) {
                             setAmount('');
+                            setType('');
+                            setFeeInGcash(false);
                         }
                     }}
                     resetOnSuccess={!transaction}
@@ -91,6 +107,9 @@ export function GcashTransactionDialog({
                                 <Select
                                     name="type"
                                     defaultValue={transaction?.type}
+                                    onValueChange={(v) =>
+                                        setType(v as GcashTransactionType)
+                                    }
                                 >
                                     <SelectTrigger id="type">
                                         <SelectValue placeholder="Select type" />
@@ -109,15 +128,14 @@ export function GcashTransactionDialog({
 
                             <div className="grid gap-2">
                                 <Label htmlFor="amount">
-                                    Amount (₱{GCASH_MIN_AMOUNT}–₱
-                                    {GCASH_MAX_AMOUNT})
+                                    Amount (₱{gcashMin}–₱{gcashMax})
                                 </Label>
                                 <Input
                                     id="amount"
                                     name="amount"
                                     type="number"
-                                    min={GCASH_MIN_AMOUNT}
-                                    max={GCASH_MAX_AMOUNT}
+                                    min={gcashMin}
+                                    max={gcashMax}
                                     value={amount}
                                     onChange={(e) =>
                                         setAmount(e.target.value)
@@ -128,10 +146,47 @@ export function GcashTransactionDialog({
                                 {fee !== null && (
                                     <p className="text-sm text-muted-foreground">
                                         Service fee: ₱{fee}
+                                        {isCashOut && feeInGcash
+                                            ? ' (included in GCash transfer)'
+                                            : ''}
                                     </p>
                                 )}
                                 <InputError message={errors.amount} />
                             </div>
+
+                            {isCashOut && (
+                                <div className="flex items-start gap-3 rounded-md border p-3">
+                                    <Checkbox
+                                        id="fee_in_gcash"
+                                        name="fee_in_gcash"
+                                        checked={feeInGcash}
+                                        onCheckedChange={(checked) =>
+                                            setFeeInGcash(checked === true)
+                                        }
+                                        value="1"
+                                    />
+                                    <div className="grid gap-1">
+                                        <Label
+                                            htmlFor="fee_in_gcash"
+                                            className="cursor-pointer"
+                                        >
+                                            Fee included in GCash transfer
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Customer sent the cash-out amount
+                                            plus the service fee via GCash.
+                                            {fee !== null && feeInGcash && (
+                                                <span>
+                                                    {' '}
+                                                    GCash received: ₱
+                                                    {Number(amount) + fee}.
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                    <InputError message={errors.fee_in_gcash} />
+                                </div>
+                            )}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="reference_number">

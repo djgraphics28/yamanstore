@@ -21,9 +21,9 @@ export function ProductForm({
     categories: Category[];
     suppliers: Supplier[];
 }) {
-    const form = product
-        ? ProductController.update.form(product)
-        : ProductController.store.form();
+    const routeDef = product
+        ? ProductController.update(product)
+        : ProductController.store();
 
     const [categoryId, setCategoryId] = useState<number | null>(
         product?.category_id ?? null,
@@ -34,7 +34,7 @@ export function ProductForm({
 
     return (
         <Form
-            {...form}
+            action={routeDef}
             options={{ preserveScroll: true }}
             className="space-y-6"
         >

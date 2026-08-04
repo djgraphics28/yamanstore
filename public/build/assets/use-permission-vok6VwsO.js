@@ -1,0 +1,1 @@
+import{f as e,i as t}from"./wayfinder-Bs8CvcSC.js";var n=t();function r(t){let r=(0,n.c)(3),{auth:i}=e().props,a;return r[0]!==i.permissions||r[1]!==t?(a=i.permissions.includes(t),r[0]=i.permissions,r[1]=t,r[2]=a):a=r[2],a}function i(){let{auth:t}=e().props;return t.permissions}export{i as n,r as t};

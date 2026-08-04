@@ -20,7 +20,7 @@ class LoadTransactionFactory extends Factory
      */
     public function definition(): array
     {
-        $amount = fake()->numberBetween(LoadFeeSchedule::MIN_AMOUNT, LoadFeeSchedule::MAX_AMOUNT);
+        $amount = fake()->numberBetween(LoadFeeSchedule::minAmount(), LoadFeeSchedule::maxAmount());
 
         return [
             'network' => fake()->randomElement(LoadNetwork::cases()),

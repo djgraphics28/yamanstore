@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property GcashTransactionType $type
  * @property int $amount
  * @property int $service_fee
+ * @property bool $fee_in_gcash
  * @property string|null $reference_number
  * @property int $user_id
  * @property string|null $notes
@@ -31,6 +32,7 @@ class GcashTransaction extends Model
         'type',
         'amount',
         'service_fee',
+        'fee_in_gcash',
         'reference_number',
         'user_id',
         'notes',
@@ -42,6 +44,7 @@ class GcashTransaction extends Model
             'type' => GcashTransactionType::class,
             'amount' => 'integer',
             'service_fee' => 'integer',
+            'fee_in_gcash' => 'boolean',
         ];
     }
 

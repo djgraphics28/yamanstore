@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\FeeScheduleController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -24,6 +25,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    Route::get('settings/fee-schedule', [FeeScheduleController::class, 'edit'])->name('fee-schedule.edit');
+    Route::put('settings/fee-schedule/gcash', [FeeScheduleController::class, 'updateGcash'])->name('fee-schedule.update-gcash');
+    Route::put('settings/fee-schedule/load', [FeeScheduleController::class, 'updateLoad'])->name('fee-schedule.update-load');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

@@ -22,7 +22,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { loadFeeFor, LOAD_MAX_AMOUNT, LOAD_MIN_AMOUNT } from '@/lib/gcash-fees';
+import { feeFor, maxAmount, minAmount  } from '@/lib/gcash-fees';
+import type {FeeBracket} from '@/lib/gcash-fees';
 import type { LoadNetwork } from '@/types';
 
 type EditableLoadTransaction = {
@@ -34,9 +35,11 @@ type EditableLoadTransaction = {
 };
 
 export function LoadTransactionDialog({
+    brackets,
     networks,
     transaction,
 }: {
+    brackets: FeeBracket[];
     networks: { value: string; label: string }[];
     transaction?: EditableLoadTransaction;
 }) {
@@ -45,11 +48,13 @@ export function LoadTransactionDialog({
         transaction ? String(transaction.amount) : '',
     );
 
-    const fee = amount ? loadFeeFor(Number(amount)) : null;
+    const loadMin = minAmount(brackets);
+    const loadMax = maxAmount(brackets);
+    const fee = amount ? feeFor(brackets, Number(amount)) : null;
 
-    const form = transaction
-        ? LoadTransactionController.update.form(transaction.id)
-        : LoadTransactionController.store.form();
+    const routeDef = transaction
+        ? LoadTransactionController.update(transaction.id)
+        : LoadTransactionController.store();
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -72,7 +77,7 @@ export function LoadTransactionDialog({
                 </DialogTitle>
 
                 <Form
-                    {...form}
+                    action={routeDef}
                     options={{ preserveScroll: true }}
                     onSuccess={() => {
                         setOpen(false);
@@ -111,15 +116,14 @@ export function LoadTransactionDialog({
 
                             <div className="grid gap-2">
                                 <Label htmlFor="amount">
-                                    Amount (₱{LOAD_MIN_AMOUNT}–₱
-                                    {LOAD_MAX_AMOUNT})
+                                    Amount (₱{loadMin}–₱{loadMax})
                                 </Label>
                                 <Input
                                     id="amount"
                                     name="amount"
                                     type="number"
-                                    min={LOAD_MIN_AMOUNT}
-                                    max={LOAD_MAX_AMOUNT}
+                                    min={loadMin}
+                                    max={loadMax}
                                     value={amount}
                                     onChange={(e) =>
                                         setAmount(e.target.value)

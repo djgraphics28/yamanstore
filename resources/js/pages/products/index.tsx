@@ -1,7 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { PackageIcon, PencilIcon, PlusIcon } from 'lucide-react';
+import { PackageIcon, PencilIcon, PlusIcon, UploadIcon } from 'lucide-react';
 import { useState } from 'react';
+import { ProductImportDialog } from '@/components/products/product-import-dialog';
 import { BulkActionsBar } from '@/components/bulk-actions-bar';
 import {  DataTable } from '@/components/data-table';
 import type {ColumnDef} from '@/components/data-table';
@@ -78,6 +79,7 @@ export default function ProductsIndex({
     const canDelete = usePermission('products.delete');
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+    const [importOpen, setImportOpen] = useState(false);
     const selectedIds = Object.keys(rowSelection).filter(
         (id) => rowSelection[id],
     );
@@ -221,12 +223,18 @@ export default function ProductsIndex({
                         description="Manage your store's product catalog"
                     />
                     {canCreate && (
-                        <Button asChild>
-                            <Link href={create()}>
-                                <PlusIcon className="size-4" />
-                                Add product
-                            </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setImportOpen(true)}>
+                                <UploadIcon className="size-4" />
+                                Import
+                            </Button>
+                            <Button asChild>
+                                <Link href={create()}>
+                                    <PlusIcon className="size-4" />
+                                    Add product
+                                </Link>
+                            </Button>
+                        </div>
                     )}
                 </div>
 
@@ -386,6 +394,11 @@ export default function ProductsIndex({
                     </>
                 )}
             </div>
+            <ProductImportDialog
+                open={importOpen}
+                onOpenChange={setImportOpen}
+                onImported={() => router.reload({ only: ['products'] })}
+            />
         </>
     );
 }
