@@ -20,14 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SupplierSeeder::class);
         $this->call(ProductSeeder::class);
 
-        // User::factory(10)->create();
-
-        $user = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-        $user->assignRole('Administrator');
+        $this->call(AdminUserSeeder::class);
 
         $this->call(GcashFeeBracketSeeder::class);
         $this->call(GcashDemoSeeder::class);
